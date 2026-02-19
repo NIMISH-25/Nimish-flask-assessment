@@ -10,7 +10,7 @@ This report documents the 3 intentional bugs described in the assessment.
 `/dashboard` can be opened without being logged in, and it can crash because `email` can be `None`.
 
 **Where:**  
-In the original `app.py`, the `dashboard()` route had no auth check and used `email = session.get('email')`.
+In the original `app.py`, the `dashboard()` route had no auth check and used `email = session.get('email')` LINE-55.
 
 **Why it matters:**  
 Functionality and security: unauthenticated users can see a protected page, and the app can throw errors.
@@ -31,7 +31,7 @@ Added a small `login_required` decorator and applied it to `/dashboard` (and als
 `/api/files` loops all files, and for each file it does a user lookup. In a real database this pattern becomes very slow.
 
 **Where:**  
-In the original `app.py`, `/api/files` did the user lookup inside the loop.
+In the original `app.py`, `/api/files` did the user lookup inside the loop LINE-76.
 
 **Why it matters:**  
 Performance: this scales poorly as file counts grow.
@@ -50,7 +50,7 @@ Look up the logged in user name once, filter to only the current user’s files,
 `/upload` accepts any string containing a dot. A filename like `malware.exe.pdf` passes.
 
 **Where:**  
-In the original `app.py`, upload validation only checked `if '.' in filename:`.
+In the original `app.py`, upload validation only checked `if '.' in filename:` LINE-91.
 
 **Why it matters:**  
 Security: it makes it easier to sneak in dangerous file types disguised as “safe” files.

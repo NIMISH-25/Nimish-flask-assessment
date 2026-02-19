@@ -57,7 +57,6 @@ def dashboard():
     email = session.get('email')
     user = USERS.get(email)
     
-    # This will crash if email is None
     user_files = [f for f in FILES if f['user'] == email]
     
     return render_template('dashboard.html', 
@@ -66,6 +65,7 @@ def dashboard():
 
 # BUG #2: Fixed
 @app.route('/api/files')
+@login_required
 def get_files():
     if 'email' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
@@ -117,10 +117,8 @@ def is_allowed_filename(filename: str) -> bool:
 
 # BUG #3: Fixed
 @app.route('/upload', methods=['POST'])
-def upload():
-    if 'email' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
+@login_required
+def upload():    
     filename = request.form.get('filename', '')
     
     if not is_allowed_filename(filename):
@@ -137,10 +135,8 @@ def upload():
     return redirect(url_for('dashboard'))
 
 @app.route('/search')
-def search():
-    if 'email' not in session:
-        return redirect(url_for('login'))
-    
+@login_required
+def search():    
     query = request.args.get('q', '').lower()
     email = session['email']
     
