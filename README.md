@@ -42,9 +42,7 @@ Use these test credentials:
 - File upload (simulated)
 - Search functionality
 
-## Your Task
-
-This app has **3 bugs** that you need to find and fix. See the assessment document for details.
+## For Task 2 visit Readme.md inside next-app
 
 ## Troubleshooting
 
