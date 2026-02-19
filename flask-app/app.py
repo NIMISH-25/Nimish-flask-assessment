@@ -63,29 +63,27 @@ def dashboard():
                          user=user, 
                          files=user_files)
 
-# BUG #2: N+1 query pattern (inefficient)
-# In a real app with database, this would be very slow
+# BUG #2: Fixed
 @app.route('/api/files')
 def get_files():
     if 'email' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
     email = session['email']
-    result = []
     
-    # BUG: This loops through all files and checks user for each one
-    # In a real database, this would be separate queries for each file
-    for file in FILES:
-        # Simulating looking up user for each file (N+1 problem)
-        file_user = USERS.get(file['user'])
-        if file['user'] == email:
-            result.append({
-                'id': file['id'],
-                'name': file['name'],
-                'size': file['size'],
-                'date': file['date'],
-                'user_name': file_user['name'] if file_user else 'Unknown'
-            })
+    # BUG #2 fix: Do the user lookup once and only filter the files we need, which would solve N+1 query problem
+    user_name = USERS.get(email, {}).get('name', 'Unknown')
+    user_files = [f for f in FILES if f['user'] == email]
+    result = [
+        {
+            'id': f['id'],
+            'name': f['name'],
+            'size': f['size'],
+            'date': f['date'],
+            'user_name': user_name
+        }
+        for f in user_files
+    ]
     
     return jsonify(result)
 
