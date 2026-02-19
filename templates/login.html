@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Login</h1>
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST">
+    <div>
+        <input type="email" name="email" placeholder="Email" required value="test@example.com">
+    </div>
+    <div>
+        <input type="password" name="password" placeholder="Password" required value="password123">
+    </div>
+    <button type="submit">Login</button>
+</form>
+
+<p style="color: #666; margin-top: 20px;">
+    <strong>Test Account:</strong><br>
+    Email: test@example.com<br>
+    Password: password123
+</p>
+{% endblock %}

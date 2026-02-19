@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Dashboard</h1>
+<p>Welcome, <strong>{{ user.name }}</strong>!</p>
+
+<div class="search-box">
+    <form method="GET" action="/search">
+        <input type="text" name="q" placeholder="Search files..." value="{{ search_query or '' }}">
+        <button type="submit">Search</button>
+        {% if search_query %}
+        <a href="/dashboard"><button type="button">Clear</button></a>
+        {% endif %}
+    </form>
+</div>
+
+<h2>Your Files ({{ files|length }})</h2>
+
+{% if files %}
+<ul class="file-list">
+    {% for file in files %}
+    <li class="file-item">
+        <div class="file-info">
+            <div class="file-name">{{ file.name }}</div>
+            <div class="file-meta">{{ file.size }} • Uploaded {{ file.date }}</div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No files found.</p>
+{% endif %}
+
+<h2>Upload New File</h2>
+<form method="POST" action="/upload">
+    <input type="text" name="filename" placeholder="Filename (e.g., report.pdf)" required>
+    <button type="submit">Upload</button>
+</form>
+
+<div style="margin-top: 30px;">
+    <a href="/logout"><button type="button">Logout</button></a>
+</div>
+{% endblock %}
