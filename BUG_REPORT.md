@@ -25,7 +25,7 @@ Added a small `login_required` decorator and applied it to `/dashboard` (and als
 
 ---
 
-## Bug #2: Inefficient file listing
+## Bug #2: Inefficient file listing (N+1 style pattern)
 
 **What's broken:**  
 `/api/files` loops all files, and for each file it does a user lookup. In a real database this pattern becomes very slow.
@@ -42,5 +42,23 @@ Look up the logged in user name once, filter to only the current user’s files,
 **How to test:**  
 1. Log in.  
 2. Call `GET /api/files` and confirm you still get the same file list.
-
 ---
+
+## Bug #3: Weak filename validation allows disguised uploads
+
+**What's broken:**  
+`/upload` accepts any string containing a dot. A filename like `malware.exe.pdf` passes.
+
+**Where:**  
+In the original `app.py`, upload validation only checked `if '.' in filename:`.
+
+**Why it matters:**  
+Security: it makes it easier to sneak in dangerous file types disguised as “safe” files.
+
+**How I fixed it:**  
+Added allowlisted extensions and blocked “double extension” tricks by rejecting dangerous intermediate extensions (example: `exe` in `malware.exe.pdf`). Also normalized the name using `secure_filename`.
+
+**How to test:**  
+1. Log in.  
+2. Try uploading `malware.exe.pdf` → should return `400 Invalid filename`.  
+3. Try uploading `research_paper.pdf` → should be accepted and show up on the dashboard.

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
 from functools import wraps
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
@@ -87,8 +88,34 @@ def get_files():
     
     return jsonify(result)
 
-# BUG #3: No file type validation
-# Only checks extension, not actual file content
+ALLOWED_EXTENSIONS = {'pdf', 'csv', 'pptx', 'xlsx', 'docx', 'txt'}
+DANGEROUS_EXTENSIONS = {'exe', 'bat', 'cmd', 'com', 'js', 'jar', 'sh'}
+
+def is_allowed_filename(filename: str) -> bool:
+    if not filename:
+        return False
+
+    safe = secure_filename(filename)
+    if not safe or safe.startswith('.'):
+        return False
+
+    # Split on dots and examine the chain: "malware.exe.pdf" -> ["malware", "exe", "pdf"]
+    parts = safe.lower().split('.')
+    if len(parts) < 2:
+        return False
+
+    ext = parts[-1]
+    if ext not in ALLOWED_EXTENSIONS:
+        return False
+
+    # Reject if ANY intermediate extension is dangerous (blocks "something.exe.pdf")
+    for maybe_ext in parts[1:-1]:
+        if maybe_ext in DANGEROUS_EXTENSIONS:
+            return False
+
+    return True
+
+# BUG #3: Fixed
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'email' not in session:
@@ -96,20 +123,18 @@ def upload():
     
     filename = request.form.get('filename', '')
     
-    # BUG: Only checks if filename has extension, doesn't validate type
-    # Attacker could upload "malware.exe.pdf"
-    if '.' in filename:
-        new_file = {
-            'id': len(FILES) + 1,
-            'name': filename,
-            'size': '0.5 MB',
-            'user': session['email'],
-            'date': datetime.now().strftime('%Y-%m-%d')
-        }
-        FILES.append(new_file)
-        return redirect(url_for('dashboard'))
-    
-    return 'Invalid filename', 400
+    if not is_allowed_filename(filename):
+        return 'Invalid file', 400
+
+    new_file = {
+        'id': len(FILES) + 1,
+        'name': secure_filename(filename),
+        'size': '0.5 MB',
+        'user': session['email'],
+        'date': datetime.now().strftime('%Y-%m-%d')
+    }
+    FILES.append(new_file)
+    return redirect(url_for('dashboard'))
 
 @app.route('/search')
 def search():
