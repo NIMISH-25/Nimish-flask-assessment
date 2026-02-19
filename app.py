@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
+from functools import wraps
 import os
 
 app = Flask(__name__)
@@ -18,6 +19,16 @@ FILES = [
     {'id': 2, 'name': 'data_analysis.csv', 'size': '1.1 MB', 'user': 'test@example.com', 'date': '2024-01-20'},
     {'id': 3, 'name': 'presentation.pptx', 'size': '5.2 MB', 'user': 'test@example.com', 'date': '2024-02-01'},
 ]
+
+# Bug #1 fix: add a simple auth gate for routes that need a logged-in user
+def login_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        email = session.get('email')
+        if not email or email not in USERS:
+            return redirect(url_for('login'))
+        return view_func(*args, **kwargs)
+    return wrapper
 
 @app.route('/')
 def index():
@@ -38,9 +49,9 @@ def login():
     
     return render_template('login.html')
 
-# BUG #1: No authentication check!
-# Anyone can access dashboard without logging in
+# BUG #1: Fixed
 @app.route('/dashboard')
+@login_required
 def dashboard():
     email = session.get('email')
     user = USERS.get(email)
